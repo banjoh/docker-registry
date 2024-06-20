@@ -4,17 +4,6 @@ configs:
     content: |
       # registry:password
       registry:$2y$10$KvdtiIs8YdZBatSrkJ8Hte9EWf2/5BohaYMiWOlM.hDqO6K6ph2ii
-  docker-config-mtls:
-    # https://distribution.github.io/distribution/about/configuration/
-    content: |
-      version: 0.1
-      http:
-        tls:
-          clientcas:
-            - /certs/ca.crt
-      storage:
-        filesystem:
-          rootdirectory: /var/lib/registry
 
 services:
   registry:
@@ -63,11 +52,10 @@ services:
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
       REGISTRY_HTTP_TLS_CERTIFICATE: /certs/server-fullchain.crt
       REGISTRY_HTTP_TLS_KEY: /certs/server.key
+      REGISTRY_HTTP_TLS_CLIENTCAS: '["/certs/ca.crt"]'
     configs:
       - source: auth
         target: /auth/htpasswd
-      - source: docker-config-mtls
-        target: /etc/docker/registry/config.yml
     volumes:
       - ./certs:/certs
       - ./data-auth-mtls:/var/lib/registry

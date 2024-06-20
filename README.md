@@ -17,10 +17,12 @@ This is not meant to be used in live systems. You can use it to test a registry 
 make run
 ```
 
-- Simple test using `curl`. Expect a `301` header
+- Simple test using `curl` to reach the mtls configured registry
 ```sh
-curl -L --cert certs/client.crt --key certs/client.key --cacert certs/ca.crt https://localhost:5003/v2 -I
-HTTP/1.1 301 Moved Permanently
+curl https://localhost:5003 --cacert certs/ca.crt --cert certs/client.crt --key certs/client.key -I
+HTTP/2 200
+cache-control: no-cache
+date: Thu, 20 Jun 2024 12:11:01 GMT
 ...
 ```
 
