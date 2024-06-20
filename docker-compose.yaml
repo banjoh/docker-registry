@@ -1,0 +1,75 @@
+# Based on https://distribution.github.io/distribution/about/deploying/
+configs:
+  auth:
+    content: |
+      # registry:password
+      registry:$2y$10$KvdtiIs8YdZBatSrkJ8Hte9EWf2/5BohaYMiWOlM.hDqO6K6ph2ii
+  docker-config-mtls:
+    # https://distribution.github.io/distribution/about/configuration/
+    content: |
+      version: 0.1
+      http:
+        tls:
+          clientcas:
+            - /certs/ca.crt
+      storage:
+        filesystem:
+          rootdirectory: /var/lib/registry
+
+services:
+  registry:
+    image: registry:2
+    ports:
+      - 5000:5000
+    volumes:
+      - ./data:/var/lib/registry
+
+  registry-basic-auth:
+    image: registry:2
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    configs:
+      - source: auth
+        target: /auth/htpasswd
+    ports:
+      - 5001:5000
+    volumes:
+      - ./data-auth:/var/lib/registry
+
+  registry-basic-auth-tls:
+    image: registry:2
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_HTTP_TLS_CERTIFICATE: /certs/server-fullchain.crt
+      REGISTRY_HTTP_TLS_KEY: /certs/server.key
+    configs:
+      - source: auth
+        target: /auth/htpasswd
+    volumes:
+      - ./certs:/certs
+      - ./data-auth-tls:/var/lib/registry
+    ports:
+      - 5002:5000
+
+  registry-basic-auth-mtls:
+    image: registry:2
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_HTTP_TLS_CERTIFICATE: /certs/server-fullchain.crt
+      REGISTRY_HTTP_TLS_KEY: /certs/server.key
+    configs:
+      - source: auth
+        target: /auth/htpasswd
+      - source: docker-config-mtls
+        target: /etc/docker/registry/config.yml
+    volumes:
+      - ./certs:/certs
+      - ./data-auth-mtls:/var/lib/registry
+    ports:
+      - 5003:5000
